@@ -9,7 +9,7 @@ app.get("/", (req, res) => {
   res.send("Server is Ready");
 });
 
-const { MongoClient, ServerApiVersion } = require("mongodb");
+const { MongoClient, ServerApiVersion, ObjectId } = require("mongodb");
 const uri =
   "mongodb+srv://parrotsacademyteacher_db_user:dKZ1WKpuYkpRuuii@cluster0.1msvaql.mongodb.net/?appName=Cluster0";
 
@@ -25,26 +25,60 @@ const client = new MongoClient(uri, {
 async function run() {
   try {
     await client.connect();
-    const seminarCol = client.db("PSeminarDB").collection("users")
+    const seminarCol = client.db("PSeminarDB").collection("users");
 
-    app.post("/seminar",async (req, res) => {
+    // This is for create
+    app.post("/seminar", async (req, res) => {
       const data = req.body;
-      console.log(data);
-      const result = await seminarCol.insertOne(data)
+      const email = req.body.email
+      const allUserEmail = await seminarCol.find({email}).toArray()
+      if(allUserEmail.length > 0){
+        throw Error("This email already exist")
+      }
+      const result = await seminarCol.insertOne(data);
       res.json({
-        success:true,
-        msg:"Successfully Submited",
-        result:result
-      })
+        success: true,
+        msg: "Successfully Submited",
+        result: result,
+      });
     });
 
-    app.get("/seminar",async(req,res)=>{
-        const result = await seminarCol.find().toArray()
-        res.send(result)
+    // this is for read / get
+    app.get("/seminar", async (req, res) => {
+      const result = await seminarCol.find().toArray();
+      res.send(result);
+    });
+
+    // this is for delete with body
+    // app.delete("/delete", async (req, res) => {
+    //   const id = req.body.id;
+    //   console.log(id);
+    //   const result = await seminarCol.deleteOne({ _id: new ObjectId(id) });
+    //   console.log(result);
+    //   res.send(result);
+    // });
+
+    // this is for delete with params
+
+    app.delete("/seminar/:id", async (req, res) => {
+      const id = req.params.id;
+      console.log(id);
+      const result = await seminarCol.deleteOne({ _id: new ObjectId(id) });
+      res.send(result)
+    });
+
+    // This is for update
+    app.patch("/seminar/:id",async(req,res)=>{
+      const id = req.params.id
+      const filter = {_id:id}
+      const newName = req.body.name
+      console.log(name,"newname");
+      const updateDoc = {$set:{
+        name:newName
+      }}
+      const result = await seminarCol.updateOne(filter,updateDoc)
+      res.send(result)
     })
-
-
-
 
     await client.db("admin").command({ ping: 1 });
     console.log(
