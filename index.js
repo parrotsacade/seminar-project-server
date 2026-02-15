@@ -30,10 +30,10 @@ async function run() {
     // This is for create
     app.post("/seminar", async (req, res) => {
       const data = req.body;
-      const email = req.body.email
-      const allUserEmail = await seminarCol.find({email}).toArray()
-      if(allUserEmail.length > 0){
-        throw Error("This email already exist")
+      const email = req.body.email;
+      const allUserEmail = await seminarCol.find({ email }).toArray();
+      if (allUserEmail.length > 0) {
+        throw Error("This email already exist");
       }
       const result = await seminarCol.insertOne(data);
       res.json({
@@ -43,9 +43,18 @@ async function run() {
       });
     });
 
-    // this is for read / get
+    // this is for read All / get All
     app.get("/seminar", async (req, res) => {
       const result = await seminarCol.find().toArray();
+      res.send(result);
+    });
+
+    // this is for read single / get single
+
+    app.get("/:id", async (req, res) => {
+      const id = req.params.id;
+      console.log(id, "user id");
+      const result = await seminarCol.findOne({ _id: new ObjectId(id) });
       res.send(result);
     });
 
@@ -64,21 +73,23 @@ async function run() {
       const id = req.params.id;
       console.log(id);
       const result = await seminarCol.deleteOne({ _id: new ObjectId(id) });
-      res.send(result)
+      res.send(result);
     });
 
     // This is for update
-    app.patch("/seminar/:id",async(req,res)=>{
-      const id = req.params.id
-      const filter = {_id:id}
-      const newName = req.body.name
-      console.log(name,"newname");
-      const updateDoc = {$set:{
-        name:newName
-      }}
-      const result = await seminarCol.updateOne(filter,updateDoc)
-      res.send(result)
-    })
+    app.patch("/seminar/:id", async (req, res) => {
+      const id = req.params.id;
+      const filter = { _id: new ObjectId(id) };
+      const newName = req.body.name;
+      console.log(newName, "newname");
+      const updateDoc = {
+        $set: {
+          name: newName,
+        },
+      };
+      const result = await seminarCol.updateOne(filter, updateDoc);
+      res.send(result);
+    });
 
     await client.db("admin").command({ ping: 1 });
     console.log(
